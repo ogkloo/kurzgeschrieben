@@ -1,0 +1,49 @@
+[project]
+name = "kurzgeschrieben"
+version = "0.1.0"
+description = "Turn YouTube videos into Wikipedia-style articles by downloading the transcript and summarizing it via a configurable LLM."
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.11"
+authors = [
+    { name = "ogkloo" },
+]
+keywords = ["youtube", "transcript", "summarization", "llm", "openrouter", "wikipedia"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Environment :: Web Environment",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Multimedia :: Video",
+    "Topic :: Text Processing",
+]
+dependencies = [
+    "flask>=3.1.3",
+    "markdown>=3.10.2",
+    "openai>=2.31.0",
+    "python-dotenv>=1.2.2",
+    "pyyaml>=6.0.3",
+    "youtube-transcript-api>=1.2.4",
+]
+
+[project.urls]
+Homepage = "https://github.com/ogkloo/kurzgeschrieben"
+Repository = "https://github.com/ogkloo/kurzgeschrieben"
+Issues = "https://github.com/ogkloo/kurzgeschrieben/issues"
+
+[project.scripts]
+kurzgeschrieben = "kurzgeschrieben.cli:main"
+kurzgeschrieben-web = "kurzgeschrieben.webapp:run"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["kurzgeschrieben"]

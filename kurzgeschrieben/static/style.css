@@ -1,0 +1,348 @@
+/* kurzgeschrieben — cleaner Wikipedia, dark mode.
+ *
+ * Visual target: the body of a Wikipedia article (serif headings, sans body,
+ * underline rule under h1/h2, comfortable centered column) with every piece
+ * of Wikipedia's own UI chrome removed — no search, no logo, no tools rail,
+ * no talk/edit/history tabs, no language switcher. Just the text.
+ */
+
+:root {
+  --bg: #181818;
+  --bg-alt: #1f1f1f;
+  --fg: #e6e6e6;
+  --fg-dim: #8f8f8f;
+  --fg-bright: #f5f5f5;
+  --accent: #8ab4f8;
+  --accent-hover: #aecbfa;
+  --rule: #2e2e2e;
+  --blurb-bg: #1b2433;
+  --blurb-border: #3a5a88;
+  --blurb-fg: #b9c9e3;
+  --danger-bg: #2d1515;
+  --danger-border: #a94b4b;
+  --danger-fg: #edbcbc;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue",
+    Helvetica, Arial, sans-serif;
+  font-size: 17px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.page {
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 6rem;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+  color: var(--accent-hover);
+}
+
+/* ------- Typography: Wikipedia-like serif headings ------- */
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: "Linux Libertine", "Libertinus Serif", "Palatino Linotype",
+    "Book Antiqua", Palatino, Georgia, serif;
+  color: var(--fg-bright);
+  font-weight: normal;
+  margin-top: 2.25rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.25;
+}
+
+h1 {
+  font-size: 2.1rem;
+}
+
+h2 {
+  font-size: 1.55rem;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 0.3rem;
+  margin-top: 2.75rem;
+}
+
+h3 {
+  font-size: 1.2rem;
+  margin-top: 1.75rem;
+}
+
+h4 {
+  font-size: 1.05rem;
+}
+
+p {
+  margin: 0 0 1rem;
+}
+
+ul,
+ol {
+  margin: 0 0 1rem;
+  padding-left: 1.5rem;
+}
+
+li {
+  margin: 0.25rem 0;
+}
+
+strong {
+  color: var(--fg-bright);
+}
+
+em {
+  color: var(--fg);
+}
+
+/* ------- Site header (index page) ------- */
+
+.site-header {
+  margin-bottom: 2rem;
+}
+
+.site-title {
+  font-size: 1.9rem;
+  margin: 0 0 0.25rem;
+  border: 0;
+  padding: 0;
+}
+
+.site-subtitle {
+  color: var(--fg-dim);
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+/* ------- Submit form ------- */
+
+.submit-form {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+}
+
+.submit-form input[type="url"] {
+  flex: 1;
+  background: var(--bg-alt);
+  color: var(--fg);
+  border: 1px solid var(--rule);
+  padding: 0.65rem 0.85rem;
+  border-radius: 2px;
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+.submit-form input[type="url"]:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.submit-form input[type="url"]::placeholder {
+  color: var(--fg-dim);
+}
+
+.submit-form button {
+  background: var(--accent);
+  color: #0c1420;
+  border: 0;
+  padding: 0.65rem 1.3rem;
+  font-size: 1rem;
+  font-family: inherit;
+  font-weight: 500;
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.submit-form button:hover {
+  background: var(--accent-hover);
+}
+
+/* ------- Index: section heading + summary list ------- */
+
+.section-heading {
+  font-size: 1.3rem;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 0.3rem;
+  margin-top: 2.5rem;
+}
+
+.summary-list {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 0;
+}
+
+.summary-list li {
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--rule);
+  font-size: 0.98rem;
+}
+
+.summary-list li:last-child {
+  border-bottom: 0;
+}
+
+.dim {
+  color: var(--fg-dim);
+  font-size: 0.88rem;
+}
+
+/* ------- Top nav (summary page) ------- */
+
+.topnav {
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.topnav a {
+  color: var(--fg-dim);
+}
+
+.topnav a:hover {
+  color: var(--accent);
+}
+
+/* ------- Wiki-article body ------- */
+
+.wiki-article .article-title {
+  font-size: 2.15rem;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 0.5rem;
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+.ai-blurb {
+  background: var(--blurb-bg);
+  border-left: 3px solid var(--blurb-border);
+  color: var(--blurb-fg);
+  padding: 0.7rem 1rem;
+  margin: 0 0 2rem;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+/* ------- Table of contents (post-render, between lede and body) ------- */
+
+.article-toc {
+  background: var(--bg-alt);
+  border: 1px solid var(--rule);
+  padding: 0.75rem 1rem 0.85rem;
+  margin: 0.5rem 0 2rem;
+  font-family: inherit;
+  font-size: 0.9rem;
+  max-width: 28rem;
+}
+
+.article-toc-heading {
+  color: var(--fg-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.72rem;
+  margin-bottom: 0.4rem;
+}
+
+.article-toc ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.article-toc ul ul {
+  margin-top: 0.15rem;
+  padding-left: 1rem;
+  font-size: 0.86rem;
+}
+
+.article-toc li {
+  margin: 0.1rem 0;
+  line-height: 1.4;
+}
+
+.article-toc a {
+  color: var(--fg);
+}
+
+.article-toc a:hover {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.article-body p:first-child {
+  margin-top: 0;
+}
+
+.article-body p {
+  color: var(--fg);
+}
+
+/* Let the first post-lede h2 sit closer to the lede visually than later h2s,
+ * since Wikipedia's own spacing is tighter there. */
+.article-body h2:first-of-type {
+  margin-top: 2.25rem;
+}
+
+.article-footer {
+  margin-top: 3.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--rule);
+  color: var(--fg-dim);
+  font-size: 0.85rem;
+}
+
+.article-footer p {
+  margin: 0.25rem 0;
+}
+
+/* ------- Regenerate button (opt-in via config) ------- */
+
+.regenerate-form {
+  margin-top: 0.85rem;
+}
+
+.regenerate-form button {
+  background: transparent;
+  color: var(--fg-dim);
+  border: 1px solid var(--rule);
+  padding: 0.35rem 0.8rem;
+  font-size: 0.8rem;
+  font-family: inherit;
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.regenerate-form button:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* ------- Errors ------- */
+
+.error {
+  background: var(--danger-bg);
+  border-left: 3px solid var(--danger-border);
+  color: var(--danger-fg);
+  padding: 0.7rem 1rem;
+  margin: 0 0 1.5rem;
+  font-size: 0.92rem;
+}

@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}{{ summary.video_title }}{% endblock %}
+{% block content %}
+  <nav class="topnav">
+    <a href="{{ url_for('index') }}">← back</a>
+  </nav>
+
+  <article class="wiki-article">
+    <h1 class="article-title">{{ summary.video_title }}</h1>
+
+    <div class="ai-blurb">
+      This is an AI-generated summary of the video based on its transcript.
+    </div>
+
+    <div class="article-body">
+      {{ lede_html|safe }}
+
+      {% if toc_html %}
+        <nav class="article-toc" aria-label="Contents">
+          <div class="article-toc-heading">Contents</div>
+          {{ toc_html|safe }}
+        </nav>
+      {% endif %}
+
+      {{ body_html|safe }}
+    </div>
+
+    <footer class="article-footer">
+      <p>
+        Model: <span class="dim">{{ summary.model }}</span>
+        · Generated: <span class="dim">{{ summary.created_at[:10] }}</span>
+        {% if summary.video_author %}
+          · Source: <span class="dim">{{ summary.video_author }}</span>
+        {% endif %}
+      </p>
+      <p>
+        <a href="https://www.youtube.com/watch?v={{ summary.video_id }}" rel="noopener">Original video ↗</a>
+      </p>
+      {% if allow_regenerate %}
+        <form class="regenerate-form" method="post" action="{{ url_for('regenerate_summary', video_id=summary.video_id) }}">
+          <button type="submit">Regenerate</button>
+        </form>
+      {% endif %}
+    </footer>
+  </article>
+{% endblock %}
+

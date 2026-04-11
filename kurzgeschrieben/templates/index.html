@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}kurzgeschrieben{% endblock %}
+{% block content %}
+  <header class="site-header">
+    <h1 class="site-title">kurzgeschrieben</h1>
+    <p class="site-subtitle">YouTube videos, reformatted for reading.</p>
+  </header>
+
+  <form class="submit-form" method="post" action="{{ url_for('submit') }}">
+    <input
+      type="url"
+      name="url"
+      placeholder="https://www.youtube.com/watch?v=..."
+      autofocus
+      required>
+    <button type="submit">Summarize</button>
+  </form>
+
+  {% if error %}
+    <p class="error">{{ error }}</p>
+  {% endif %}
+
+  <h2 class="section-heading">Previously read</h2>
+  {% if summaries %}
+    <ul class="summary-list">
+      {% for s in summaries %}
+        <li>
+          <a href="{{ url_for('show_summary', video_id=s.video_id) }}">{{ s.video_title }}</a>
+          {% if s.video_author %}
+            <span class="dim"> · {{ s.video_author }}</span>
+          {% endif %}
+          <span class="dim"> · {{ s.created_at[:10] }}</span>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="dim">No summaries yet. Paste a YouTube URL above to create one.</p>
+  {% endif %}
+{% endblock %}
