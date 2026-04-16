@@ -177,6 +177,22 @@ em {
   background: var(--accent-hover);
 }
 
+.submit-form .style-select {
+  background: var(--bg-alt);
+  color: var(--fg);
+  border: 1px solid var(--rule);
+  padding: 0.65rem 0.5rem;
+  border-radius: 2px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.submit-form .style-select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
 /* ------- Index: section heading + summary list ------- */
 
 .section-heading {

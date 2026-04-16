@@ -44,9 +44,16 @@ from .transcript import TranscriptError, extract_video_id
 # that own those paths.
 PACKAGE_DIR = Path(__file__).resolve().parent
 
-# The web UI is built around the wiki_article style specifically — that's
-# what the user is dogfooding. The CLI still respects the config default.
-WEB_STYLE: Final[str] = "wiki_article"
+# Human-readable labels for each summarization style, in the order they
+# should appear in the UI dropdown.  The first entry is the default when the
+# user submits without choosing.
+STYLE_LABELS: Final[dict[str, str]] = {
+    "wiki_article": "Full article",
+    "interview": "Interview",
+    "wiki_lede": "Short summary",
+}
+
+DEFAULT_STYLE: Final[str] = "wiki_article"
 
 # The ToC below the lede includes h2 and h3. Deeper is noise; shallower hides
 # the sub-topics that make navigation worthwhile.
@@ -68,7 +75,12 @@ app = Flask(
 @app.route("/")
 def index():
     summaries = summary_cache.list_all()
-    return render_template("index.html", summaries=summaries, error=None)
+    return render_template(
+        "index.html",
+        summaries=summaries,
+        error=None,
+        style_labels=STYLE_LABELS,
+    )
 
 
 @app.route("/submit", methods=["POST"])
@@ -77,6 +89,10 @@ def submit():
     if not url:
         return _render_index_error("please paste a YouTube URL")
 
+    style = request.form.get("style", DEFAULT_STYLE)
+    if style not in STYLE_LABELS:
+        return _render_index_error(f"unknown format: {style}")
+
     try:
         video_id = extract_video_id(url)
     except TranscriptError as err:
@@ -84,8 +100,8 @@ def submit():
 
     # Fast path: already have a cached summary for this (video, style) pair.
     # Re-submitting is meant to be an instant bookmark-jump, not a regenerate.
-    if summary_cache.load(video_id, WEB_STYLE) is not None:
-        return redirect(url_for("show_summary", video_id=video_id))
+    if summary_cache.load(video_id, style) is not None:
+        return redirect(url_for("show_summary", video_id=video_id, style=style))
 
     try:
         config = load_config()
@@ -93,16 +109,17 @@ def submit():
         return _render_index_error(f"config error: {err}")
 
     try:
-        _run_summary_pipeline(video_id, config)
+        _run_summary_pipeline(video_id, style, config)
     except (TranscriptError, LLMError, ConfigError) as err:
         return _render_index_error(str(err))
 
-    return redirect(url_for("show_summary", video_id=video_id))
+    return redirect(url_for("show_summary", video_id=video_id, style=style))
 
 
 @app.route("/s/<video_id>")
 def show_summary(video_id: str):
-    summary = summary_cache.load(video_id, WEB_STYLE)
+    style = request.args.get("style", DEFAULT_STYLE)
+    summary = summary_cache.load(video_id, style)
     if summary is None:
         abort(404)
 
@@ -120,6 +137,7 @@ def show_summary(video_id: str):
         toc_html=toc_html,
         body_html=body_html,
         allow_regenerate=config.web.allow_regenerate,
+        style_label=STYLE_LABELS.get(style, style),
     )
 
 
@@ -131,26 +149,23 @@ def regenerate_summary(video_id: str):
         return _render_index_error(f"config error: {err}")
 
     if not config.web.allow_regenerate:
-        # Route is disabled by config — refuse even if someone knows the URL.
-        # This is the server-side enforcement that makes the "hand this to
-        # other people" toggle actually safe.
         abort(403)
 
-    # Must currently exist; regenerating a video we've never summarized is a
-    # nonsense request (use /submit for that).
-    if summary_cache.load(video_id, WEB_STYLE) is None:
+    style = request.form.get("style", DEFAULT_STYLE)
+    if style not in STYLE_LABELS:
+        return _render_index_error(f"unknown format: {style}")
+
+    if summary_cache.load(video_id, style) is None:
         abort(404)
 
-    # Drop the old summary. Transcript cache is untouched — regeneration is
-    # purposely an LLM-only re-run, not a YouTube re-fetch.
-    summary_cache.delete(video_id, WEB_STYLE)
+    summary_cache.delete(video_id, style)
 
     try:
-        _run_summary_pipeline(video_id, config)
+        _run_summary_pipeline(video_id, style, config)
     except (TranscriptError, LLMError, ConfigError) as err:
         return _render_index_error(str(err))
 
-    return redirect(url_for("show_summary", video_id=video_id))
+    return redirect(url_for("show_summary", video_id=video_id, style=style))
 
 
 @app.errorhandler(404)
@@ -170,26 +185,27 @@ def not_found(_err):
 # --------------------------------------------------------------------------- #
 
 
-def _run_summary_pipeline(video_id: str, config: Config) -> Summary:
+def _run_summary_pipeline(video_id: str, style: str, config: Config) -> Summary:
     """Fetch transcript (cache-first), fetch metadata, run LLM, save summary.
 
     Shared by /submit and /regenerate. Metadata must be fetched BEFORE the LLM
-    call because `wiki_article` embeds title/creator/length directly into the
-    user prompt. A failed oEmbed still returns a best-effort `VideoMeta` (with
-    the bare video id as the fallback title) so the pipeline keeps running.
+    call because metadata-requiring styles embed title/creator/length directly
+    into the user prompt. A failed oEmbed still returns a best-effort
+    `VideoMeta` (with the bare video id as the fallback title) so the pipeline
+    keeps running.
 
     Raises TranscriptError / LLMError / ConfigError on failure so callers can
     surface a clean error to the user.
     """
     transcript, _ = get_transcript(video_id)
     meta = youtube_meta.fetch_meta(video_id)
-    content = summarize(transcript, style=WEB_STYLE, config=config, meta=meta)
+    content = summarize(transcript, style=style, config=config, meta=meta)
 
     summary = Summary(
         video_id=video_id,
         video_title=meta.title,
         video_author=meta.author,
-        style=WEB_STYLE,
+        style=style,
         model=config.llm.model,
         content=content,
         created_at=summary_cache.now_iso(),
@@ -241,17 +257,38 @@ def _render_index_error(message: str) -> str:
         "index.html",
         summaries=summary_cache.list_all(),
         error=message,
+        style_labels=STYLE_LABELS,
     )
 
 
-def run(host: str = "127.0.0.1", port: int = 7777) -> None:
+def run() -> None:
     """Entry point for the `kurzgeschrieben-web` console script.
 
     Binds to loopback by default so the server is reachable only from the
-    machine it's running on — this is meant as a local-only dogfooding tool,
-    not a public service. Pass `host="0.0.0.0"` to expose it to your LAN.
+    machine it's running on. Pass ``--lan`` to bind to ``0.0.0.0`` and expose
+    the server to your local network.
     """
-    app.run(host=host, port=port)
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        prog="kurzgeschrieben-web",
+        description="Local web app for kurzgeschrieben.",
+    )
+    parser.add_argument(
+        "--lan",
+        action="store_true",
+        help="Bind to 0.0.0.0 so the server is reachable from your local network",
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=7777,
+        help="Port to listen on (default: 7777)",
+    )
+    args = parser.parse_args()
+
+    host = "0.0.0.0" if args.lan else "127.0.0.1"
+    app.run(host=host, port=args.port)
 
 
 if __name__ == "__main__":

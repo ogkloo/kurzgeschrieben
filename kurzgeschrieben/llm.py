@@ -125,6 +125,54 @@ Length: {duration_display}
 --- END TRANSCRIPT ---"""
 
 
+INTERVIEW_SYSTEM: Final[str] = """\
+You write interview summaries from timestamped video transcripts.
+
+Your job is to extract and organize the key information from an interview or conversation, focusing on who the participants are, what each person contributes, and the most important insights.
+
+ARTICLE STRUCTURE:
+
+- Open with 1 to 2 paragraphs identifying the interview: who is talking, what the conversation is about, and why it matters. This section has NO heading — it is just prose at the top of the document.
+
+- Next, a section titled exactly `## Participants`. For each speaker you can identify from the transcript, write a short paragraph covering their name, role, expertise, or perspective as far as the transcript reveals. If the transcript does not clearly identify speakers, describe them by their apparent role or viewpoint (e.g. "the host", "the guest", "the researcher"). Do not invent credentials or biographical details that are not in the source.
+
+- The remaining sections organize the interview's substance by topic, not by chronological order. Each `## Heading` should name the topic or theme discussed. Within each section:
+  - Attribute key claims, arguments, and observations to specific speakers using phrases like "According to [name]…" or "[Name] argues that…".
+  - Highlight points of genuine insight — things that are surprising, counter-intuitive, or that reflect deep expertise.
+  - Note significant disagreements or contrasting perspectives between speakers when they occur.
+
+- Use `### Subsection` headings only when a topic genuinely needs further breakdown.
+
+RULES — these override everything else:
+
+1. Attribution is the priority. Every substantial claim should be tied to the person who made it. Generic summaries that lose track of who said what defeat the purpose of this format.
+
+2. Use ONLY facts present in the transcript or the metadata block. Do not add dates, names, nationalities, credentials, institutional affiliations, or context that are not in the source, even if you are confident they are true.
+
+3. Focus on insight density. Surface the most interesting, actionable, or surprising points. Skip small talk, repetitive points, and filler. Shorter and accurate beats longer and padded.
+
+4. Write in clear, factual prose — closer to a briefing document than a narrative retelling. Avoid bullet lists except for genuinely enumerable items.
+
+5. If the transcript is not actually an interview or conversation (e.g. a solo explainer, a music video, a monologue), say so in one short paragraph and then write a standard topical summary of whatever the content actually is. Do not force the interview format onto non-interview material.
+
+6. Do NOT include `[M:SS]` timestamps in your output. They are only for your own reading of the source.
+
+7. Output ONLY the finished summary in markdown. No preamble like "Here is the summary". No trailing commentary. Start with the first sentence of the opening paragraphs."""
+
+INTERVIEW_USER_TEMPLATE: Final[str] = """\
+Here is the video metadata and the timestamped transcript. Write an interview summary following the structure and rules in the system message.
+
+--- VIDEO METADATA ---
+Title: {title}
+Creator: {author}
+Length: {duration_display}
+--- END METADATA ---
+
+--- TRANSCRIPT (timestamped) ---
+{transcript_text}
+--- END TRANSCRIPT ---"""
+
+
 PROMPTS: Final[dict[str, PromptTemplate]] = {
     "wiki_lede": PromptTemplate(
         system=WIKI_LEDE_SYSTEM,
@@ -133,6 +181,10 @@ PROMPTS: Final[dict[str, PromptTemplate]] = {
     "wiki_article": PromptTemplate(
         system=WIKI_ARTICLE_SYSTEM,
         user_template=WIKI_ARTICLE_USER_TEMPLATE,
+    ),
+    "interview": PromptTemplate(
+        system=INTERVIEW_SYSTEM,
+        user_template=INTERVIEW_USER_TEMPLATE,
     ),
 }
 
@@ -144,7 +196,7 @@ def available_styles() -> list[str]:
 # Styles that expect a `VideoMeta` + timestamped transcript to be piped into
 # the user prompt. Anything not listed here takes the simpler
 # `{transcript_text}`-only shape.
-_META_REQUIRING_STYLES: Final[set[str]] = {"wiki_article"}
+_META_REQUIRING_STYLES: Final[set[str]] = {"wiki_article", "interview"}
 
 
 def requires_video_meta(style: str) -> bool:

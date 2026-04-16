@@ -13,6 +13,11 @@
       placeholder="https://www.youtube.com/watch?v=..."
       autofocus
       required>
+    <select name="style" class="style-select">
+      {% for value, label in style_labels.items() %}
+        <option value="{{ value }}">{{ label }}</option>
+      {% endfor %}
+    </select>
     <button type="submit">Summarize</button>
   </form>
 
@@ -25,10 +30,11 @@
     <ul class="summary-list">
       {% for s in summaries %}
         <li>
-          <a href="{{ url_for('show_summary', video_id=s.video_id) }}">{{ s.video_title }}</a>
+          <a href="{{ url_for('show_summary', video_id=s.video_id, style=s.style) }}">{{ s.video_title }}</a>
           {% if s.video_author %}
             <span class="dim"> · {{ s.video_author }}</span>
           {% endif %}
+          <span class="dim"> · {{ style_labels.get(s.style, s.style) }}</span>
           <span class="dim"> · {{ s.created_at[:10] }}</span>
         </li>
       {% endfor %}

@@ -27,7 +27,8 @@
 
     <footer class="article-footer">
       <p>
-        Model: <span class="dim">{{ summary.model }}</span>
+        Format: <span class="dim">{{ style_label }}</span>
+        · Model: <span class="dim">{{ summary.model }}</span>
         · Generated: <span class="dim">{{ summary.created_at[:10] }}</span>
         {% if summary.video_author %}
           · Source: <span class="dim">{{ summary.video_author }}</span>
@@ -38,6 +39,7 @@
       </p>
       {% if allow_regenerate %}
         <form class="regenerate-form" method="post" action="{{ url_for('regenerate_summary', video_id=summary.video_id) }}">
+          <input type="hidden" name="style" value="{{ summary.style }}">
           <button type="submit">Regenerate</button>
         </form>
       {% endif %}
