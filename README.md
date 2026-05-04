@@ -7,6 +7,11 @@ CLI and a local web app with a cleaner-Wikipedia dark-mode reader.
 
 Built for people who read much faster than they watch video.
 
+Full disclosure -- Completely vibecoded from start to end, expect bugs.
+Generally seems to work pretty well in practice though. Costs are somewhat
+high (a few summaries can easily rack up $0.10 USD in API costs) due to the
+sheer length of transcripts.
+
 ## Requirements
 
 - Python 3.11+
